@@ -2,7 +2,7 @@ from datetime import timezone
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
+from django.db.models import NOT_PROVIDED, DateTimeField, ForeignKey, JSONField, Model
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 
@@ -138,7 +138,14 @@ def model_instance_diff(old, new, fields_to_check=None):
         model_fields = None
 
     if fields_to_check:
-        fields = {field for field in fields if field.name in fields_to_check}
+        _fields = set()
+        for field in fields:
+            if isinstance(field, ForeignKey):
+                if field.attname in fields_to_check:
+                    _fields.add(field)
+            if field.name in fields_to_check:
+                _fields.add(field)
+        fields = _fields
 
     # Check if fields must be filtered
     if (
